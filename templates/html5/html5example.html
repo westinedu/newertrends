@@ -1,0 +1,91 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<title>Appointment Scheduler</title>
+<script>
+function drawDiagonal() {
+// Get the canvas element and its drawing context
+var canvas = document.getElementById('diagonal');
+var context = canvas.getContext('2d');
+// Create a path in absolute coordinates
+context.beginPath();
+context.moveTo(70, 140);
+context.lineTo(140, 70);
+// Stroke the line onto the canvas
+context.stroke();
+}
+window.addEventListener("load", drawDiagonal, true);
+</script>
+</head>
+<body>
+<h1>Appointment Scheduler</h1>
+<form>
+<fieldset>
+<legend>Personal Information</legend>
+<p><label>Name <input type="text" name="name" required></label></p>
+<p><label>Telephone number <input type="tel" name="phone" required
+pattern="[2-9][0-9]{2}-[0-9]{3}-[0-9]{4}" title="North American format:
+XXX-XXX-XXXX"></label></p>
+<p><label>E-mail address <input type="email" name="email"></label></p>
+<p><label>Date of birth <input type="date" name="dob"></label></p>
+</fieldset>
+<fieldset>
+<legend>Appointment Request</legend>
+<p><label for="reason">What is the reason for your visit?</label>
+<datalist id="reasons">
+<select name="reason">
+<option>Annual physical</option>
+<option>Cold or flu symptoms</option>
+<option>Blood test</option>
+<option>Post-operative</option>
+<option>Other</option>
+</select>
+If other, please specify:
+</datalist>
+<input id="reason" name="reason" list="reasons"></p>
+<p><label>Current pain level <input type="range" name="pain" min="0"
+max="10" step=".5" value="5" title="0 is no pain, 10 is worst pain
+imaginable"></label></p>
+<p><label>Preferred date <input type="date" name="date" required
+min="2011-03-15" max="2012-03-14"></label></p>
+<p><label>Preferred time <input type="time" name="time" required
+min="08:00" max="18:00" step="1:00"></label></p>
+</fieldset>
+<p><button type="submit">Submit</button></p>
+</form>
+<canvas id="diagonal" style="border: 1px solid;" width="200" height="200">
+</canvas>
+<meter
+min="0"
+max="100"
+low="40"
+high="90"
+optimum="100"
+value="91">A+</meter>
+<menu>
+<command
+type="command">另存为...</command>
+</menu>
+<details>
+<summary>fileInfo</summary>
+<summary>metadata</summary>
+<summary>camera
+data</summary>
+</details>
+<input
+type="search"
+results="10"
+placeholder="Search..."
+/>
+<input
+type="text"
+id="name"
+/>
+
+<script type="text/javascript">
+    var infolink_pid = 1054805;
+    var infolink_wsid = 0;
+</script>
+<script type="text/javascript" src="http://resources.infolinks.com/js/infolinks_main.js"></script>
+</body>
+</html>

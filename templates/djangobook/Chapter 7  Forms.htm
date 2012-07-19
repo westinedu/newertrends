@@ -1,0 +1,1333 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!-- saved from url=(0043)http://www.djangobook.com/en/2.0/chapter07/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <title>Chapter 7: Forms</title>
+    <link rel="stylesheet" href="./Chapter 7  Forms_files/reset-min.css" type="text/css">
+    <link rel="stylesheet" href="./Chapter 7  Forms_files/grids-min.css" type="text/css">
+    <link rel="stylesheet" href="./Chapter 7  Forms_files/djangobook.css" type="text/css">
+    
+  <link href="./Chapter 7  Forms_files/container.css" type="text/css" media="screen" rel="stylesheet">
+  <link href="./Chapter 7  Forms_files/tabs.css" type="text/css" media="screen" rel="stylesheet">
+  <link href="./Chapter 7  Forms_files/resizable.css" type="text/css" media="screen" rel="stylesheet">
+
+  </head>
+  <body><div id="StayFocusd-infobar" style="display: none; top: 0px; "><img src="chrome-extension://laankejkbhbdhmipfmgcngdelahlfoji/img/eye_19x19_red.png"><span id="StayFocusd-infobar-msg"></span><span id="StayFocusd-infobar-links"><a href="http://www.djangobook.com/en/2.0/chapter07/#" id="StayFocusd-infobar-never-show">hide forever</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="http://www.djangobook.com/en/2.0/chapter07/#" id="StayFocusd-infobar-hide">hide once</a></span></div><div class="yresizable-proxy" id="comments-rzproxy"></div>
+    <div id="doc" class="yui-t7">
+      <div id="hd">
+        <h1><a href="http://www.djangobook.com/">The Django Book</a></h1>
+        <div id="global-nav">
+            <a class="about" href="http://www.djangobook.com/about/">About</a>
+          |
+            <a class="comment-help" href="http://www.djangobook.com/about/comments/">Comment help</a>
+          |
+            <a class="contact" href="http://www.djangobook.com/contact/">Contact us</a>
+          |
+            <a class="errata" href="http://www.djangobook.com/errata/">Errata</a>
+          |
+            <a class="buy" href="http://www.amazon.com/gp/product/1590597257?ie=UTF8&tag=djangoproject-20&linkCode=as2&camp=1789&creative=390957&creativeASIN=1590597257">
+                Buy the print version on Amazon.com</a>
+        </div>
+        <div class="nav">
+	
+		<a href="http://www.djangobook.com/en/2.0/chapter06/">« previous</a> ◊
+	
+	<a href="http://www.djangobook.com/en/2.0/">table of contents</a>
+	
+		◊ <a href="http://www.djangobook.com/en/2.0/chapter08/">next »</a>
+	
+</div>
+
+      </div>
+      <div id="bd">
+        <div id="yui-main">
+          <div class="yui-b">
+            
+  
+  
+  <h2 id="chapter-title">Chapter 7: Forms</h2>
+  
+  <div id="chapter-body">
+    <p class="cn" id="cn0">HTML forms are the backbone of interactive Web sites, from the simplicity of
+Google’s single search box to ubiquitous blog comment-submission forms to
+complex custom data-entry interfaces. This chapter covers how you can use
+Django to access user-submitted form data, validate it and do something with
+it. Along the way, we’ll cover <tt class="docutils literal"><span class="pre">HttpRequest</span></tt> and <tt class="docutils literal"><span class="pre">Form</span></tt> objects.<div id="b0" class="comment-indicator has-comments" style="height: 74px; "><span>2</span></div></p>
+<div class="section" id="s-getting-data-from-the-request-object">
+<h3 class="cn" id="cn1">Getting Data From the Request Object<div id="b1" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn2">We introduced <tt class="docutils literal"><span class="pre">HttpRequest</span></tt> objects in Chapter 3 when we first covered view
+functions, but we didn’t have much to say about them at the time. Recall that
+each view function takes an <tt class="docutils literal"><span class="pre">HttpRequest</span></tt> object as its first parameter, as
+in our <tt class="docutils literal"><span class="pre">hello()</span></tt> view:<div id="b2" class="comment-indicator has-comments" style="height: 58px; "><span>1</span></div></p>
+<pre class="cn literal-block" id="cn3">from django.http import HttpResponse
+
+def hello(request):
+    return HttpResponse("Hello world")
+<div id="b3" class="comment-indicator" style="height: 84px; "><span></span></div></pre>
+<p class="cn" id="cn4"><tt class="docutils literal"><span class="pre">HttpRequest</span></tt> objects, such as the variable <tt class="docutils literal"><span class="pre">request</span></tt> here, have a number
+of interesting attributes and methods that you should familiarize yourself
+with, so that you know what’s possible. You can use these attributes to get
+information about the current request (i.e., the user/Web browser that’s
+loading the current page on your Django-powered site), at the time the view
+function is executed.<div id="b4" class="comment-indicator has-comments" style="height: 74px; "><span>1</span></div></p>
+<div class="section" id="s-information-about-the-url">
+<h4 class="cn" id="cn5">Information About the URL<div id="b5" class="comment-indicator" style="height: 22px; "><span></span></div></h4>
+<p class="cn" id="cn6"><tt class="docutils literal"><span class="pre">HttpRequest</span></tt> objects contain several pieces of information about the
+currently requested URL:<div id="b6" class="comment-indicator has-comments" style="height: 20px; "><span>2</span></div></p>
+<table class="cn docutils" id="cn7">
+<colgroup>
+<col width="31%">
+<col width="41%">
+<col width="28%">
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Attribute/method</th>
+<th class="head">Description</th>
+<th class="head">Example</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal"><span class="pre">request.path</span></tt></td>
+<td>The full path, not including the
+domain but including the leading
+slash.</td>
+<td><tt class="docutils literal"><span class="pre">"/hello/"</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">request.get_host()</span></tt></td>
+<td>The host (i.e., the “domain,” in
+common parlance).</td>
+<td><tt class="docutils literal"><span class="pre">"127.0.0.1:8000"</span></tt>
+or <tt class="docutils literal"><span class="pre">"www.example.com"</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">request.get_full_path()</span></tt></td>
+<td>The <tt class="docutils literal"><span class="pre">path</span></tt>, plus a query string
+(if available).</td>
+<td><tt class="docutils literal"><span class="pre">"/hello/?print=true"</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal"><span class="pre">request.is_secure()</span></tt></td>
+<td><tt class="docutils literal"><span class="pre">True</span></tt> if the request was made via
+HTTPS. Otherwise, <tt class="docutils literal"><span class="pre">False</span></tt>.</td>
+<td><tt class="docutils literal"><span class="pre">True</span></tt> or <tt class="docutils literal"><span class="pre">False</span></tt></td>
+</tr>
+</tbody>
+<div id="b7" class="comment-indicator" style="height: 195px; "><span></span></div></table>
+<p class="cn" id="cn8">Always use these attributes/methods instead of hard-coding URLs in your views.
+This makes for more flexible code that can be reused in other places. A
+simplistic example:<div id="b8" class="comment-indicator has-comments" style="height: 37px; "><span>2</span></div></p>
+<pre class="cn literal-block" id="cn9"># BAD!
+def current_url_view_bad(request):
+    return HttpResponse("Welcome to the page at /current/")
+
+# GOOD
+def current_url_view_good(request):
+    return HttpResponse("Welcome to the page at %s" % request.path)
+<div id="b9" class="comment-indicator" style="height: 141px; "><span></span></div></pre>
+</div>
+<div class="section" id="s-other-information-about-the-request">
+<h4 class="cn" id="cn10">Other Information About the Request<div id="b10" class="comment-indicator" style="height: 22px; "><span></span></div></h4>
+<p class="cn" id="cn11"><tt class="docutils literal"><span class="pre">request.META</span></tt> is a Python dictionary containing all available HTTP headers
+for the given request — including the user’s IP address and user agent
+(generally the name and version of the Web browser). Note that the full list
+of available headers depends on which headers the user sent and which headers
+your Web server sets. Some commonly available keys in this dictionary are:<div id="b11" class="comment-indicator has-comments" style="height: 74px; "><span>2</span></div></p>
+<ul class="simple">
+<li class="cn" id="cn12"><tt class="docutils literal"><span class="pre">HTTP_REFERER</span></tt> — The referring URL, if any. (Note the misspelling of
+<tt class="docutils literal"><span class="pre">REFERER</span></tt>.)<div id="b12" class="comment-indicator has-comments" style="height: 19px; "><span>3</span></div></li>
+<li class="cn" id="cn13"><tt class="docutils literal"><span class="pre">HTTP_USER_AGENT</span></tt> — The user’s browser’s user-agent string, if any.
+This looks something like: <tt class="docutils literal"><span class="pre">"Mozilla/5.0</span> <span class="pre">(X11;</span> <span class="pre">U;</span> <span class="pre">Linux</span> <span class="pre">i686;</span> <span class="pre">fr-FR;</span> <span class="pre">rv:1.8.1.17)</span> <span class="pre">Gecko/20080829</span> <span class="pre">Firefox/2.0.0.17"</span></tt>.<div id="b13" class="comment-indicator" style="height: 38px; "><span></span></div></li>
+<li class="cn" id="cn14"><tt class="docutils literal"><span class="pre">REMOTE_ADDR</span></tt> — The IP address of the client, e.g., <tt class="docutils literal"><span class="pre">"12.345.67.89"</span></tt>.
+(If the request has passed through any proxies, then this might be a
+comma-separated list of IP addresses, e.g., <tt class="docutils literal"><span class="pre">"12.345.67.89,23.456.78.90"</span></tt>.)<div id="b14" class="comment-indicator has-comments" style="height: 56px; "><span>2</span></div></li>
+</ul>
+<p class="cn" id="cn15">Note that because <tt class="docutils literal"><span class="pre">request.META</span></tt> is just a basic Python dictionary, you’ll
+get a <tt class="docutils literal"><span class="pre">KeyError</span></tt> exception if you try to access a key that doesn’t exist.
+(Because HTTP headers are <em>external</em> data — that is, they’re submitted by your
+users’ browsers — they shouldn’t be trusted, and you should always design your
+application to fail gracefully if a particular header is empty or doesn’t
+exist.) You should either use a <tt class="docutils literal"><span class="pre">try</span></tt>/<tt class="docutils literal"><span class="pre">except</span></tt> clause or the <tt class="docutils literal"><span class="pre">get()</span></tt>
+method to handle the case of undefined keys:<div id="b15" class="comment-indicator" style="height: 94px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn16"># BAD!
+def ua_display_bad(request):
+    ua = request.META['HTTP_USER_AGENT']  # Might raise KeyError!
+    return HttpResponse("Your browser is %s" % ua)
+
+# GOOD (VERSION 1)
+def ua_display_good1(request):
+    try:
+        ua = request.META['HTTP_USER_AGENT']
+    except KeyError:
+        ua = 'unknown'
+    return HttpResponse("Your browser is %s" % ua)
+
+# GOOD (VERSION 2)
+def ua_display_good2(request):
+    ua = request.META.get('HTTP_USER_AGENT', 'unknown')
+    return HttpResponse("Your browser is %s" % ua)
+<div id="b16" class="comment-indicator" style="height: 331px; "><span></span></div></pre>
+<p class="cn" id="cn17">We encourage you to write a small view that displays all of the
+<tt class="docutils literal"><span class="pre">request.META</span></tt> data so you can get to know what’s in there. Here’s what that
+view might look like:<div id="b17" class="comment-indicator has-comments" style="height: 38px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn18">def display_meta(request):
+    values = request.META.items()
+    values.sort()
+    html = []
+    for k, v in values:
+        html.append('&lt;tr&gt;&lt;td&gt;%s&lt;/td&gt;&lt;td&gt;%s&lt;/td&gt;&lt;/tr&gt;' % (k, v))
+    return HttpResponse('&lt;table&gt;%s&lt;/table&gt;' % '\n'.join(html))
+<div id="b18" class="comment-indicator" style="height: 141px; "><span></span></div></pre>
+<p class="cn" id="cn19">As an exercise, see whether you can convert this view to use Django’s template
+system instead of hard-coding the HTML. Also try adding <tt class="docutils literal"><span class="pre">request.path</span></tt> and
+the other <tt class="docutils literal"><span class="pre">HttpRequest</span></tt> methods from the previous section.<div id="b19" class="comment-indicator has-comments" style="height: 56px; "><span>30</span></div></p>
+<!-- SL Tested ok (all four view funcs above) -->
+</div>
+<div class="section" id="s-information-about-submitted-data">
+<h4 class="cn" id="cn20">Information About Submitted Data<div id="b20" class="comment-indicator" style="height: 22px; "><span></span></div></h4>
+<p class="cn" id="cn21">Beyond basic metadata about the request, <tt class="docutils literal"><span class="pre">HttpRequest</span></tt> objects have two
+attributes that contain information submitted by the user: <tt class="docutils literal"><span class="pre">request.GET</span></tt> and
+<tt class="docutils literal"><span class="pre">request.POST</span></tt>. Both of these are dictionary-like objects that give you
+access to <tt class="docutils literal"><span class="pre">GET</span></tt> and <tt class="docutils literal"><span class="pre">POST</span></tt> data.<div id="b21" class="comment-indicator" style="height: 58px; "><span></span></div></p>
+<div class="admonition-dictionary-like-objects admonition cn admonition" id="cn22">
+<p class="first admonition-title">Dictionary-like objects</p>
+<p>When we say <tt class="docutils literal"><span class="pre">request.GET</span></tt> and <tt class="docutils literal"><span class="pre">request.POST</span></tt> are “dictionary-like”
+objects, we mean that they behave like standard Python dictionaries but
+aren’t technically dictionaries under the hood. For example,
+<tt class="docutils literal"><span class="pre">request.GET</span></tt> and <tt class="docutils literal"><span class="pre">request.POST</span></tt> both have <tt class="docutils literal"><span class="pre">get()</span></tt>, <tt class="docutils literal"><span class="pre">keys()</span></tt>
+and <tt class="docutils literal"><span class="pre">values()</span></tt> methods, and you can iterate over the keys by doing
+<tt class="docutils literal"><span class="pre">for</span> <span class="pre">key</span> <span class="pre">in</span> <span class="pre">request.GET</span></tt>.</p>
+<p>So why the distinction? Because both <tt class="docutils literal"><span class="pre">request.GET</span></tt> and <tt class="docutils literal"><span class="pre">request.POST</span></tt>
+have additional methods that normal dictionaries don’t have. We’ll get into
+these in a short while.</p>
+<p class="last">You might have encountered the similar term “file-like objects” — Python
+objects that have a few basic methods, like <tt class="docutils literal"><span class="pre">read()</span></tt>, that let them
+act as stand-ins for “real” file objects.</p>
+<div id="b22" class="comment-indicator" style="height: 222px; "><span></span></div></div>
+<p class="cn" id="cn23"><tt class="docutils literal"><span class="pre">POST</span></tt> data generally is submitted from an HTML <tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt>, while <tt class="docutils literal"><span class="pre">GET</span></tt>
+data can come from a <tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt> or the query string in the page’s URL.<div id="b23" class="comment-indicator has-comments" style="height: 38px; "><span>1</span></div></p>
+</div>
+</div>
+<div class="section" id="s-a-simple-form-handling-example">
+<h3 class="cn" id="cn24">A Simple Form-Handling Example<div id="b24" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn25">Continuing this book’s ongoing example of books, authors and publishers, let’s
+create a simple view that lets users search our book database by title.<div id="b25" class="comment-indicator" style="height: 37px; "><span></span></div></p>
+<p class="cn" id="cn26">Generally, there are two parts to developing a form: the HTML user interface
+and the backend view code that processes the submitted data. The first part is
+easy; let’s just set up a view that displays a search form:<div id="b26" class="comment-indicator has-comments" style="height: 55px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn27">from django.shortcuts import render_to_response
+
+def search_form(request):
+    return render_to_response('search_form.html')
+<div id="b27" class="comment-indicator" style="height: 84px; "><span></span></div></pre>
+<p class="cn" id="cn28">As we learned in Chapter 3, this view can live anywhere on your Python path.
+For sake of argument, put it in <tt class="docutils literal"><span class="pre">books/views.py</span></tt>.<div id="b28" class="comment-indicator has-comments" style="height: 38px; "><span>3</span></div></p>
+<p class="cn" id="cn29">The accompanying template, <tt class="docutils literal"><span class="pre">search_form.html</span></tt>, could look like this:<div id="b29" class="comment-indicator has-comments" style="height: 20px; "><span>10</span></div></p>
+<pre class="cn literal-block" id="cn30">&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Search&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;form action="/search/" method="get"&gt;
+        &lt;input type="text" name="q"&gt;
+        &lt;input type="submit" value="Search"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b30" class="comment-indicator" style="height: 217px; "><span></span></div></pre>
+<p class="cn" id="cn31">The URLpattern in <tt class="docutils literal"><span class="pre">urls.py</span></tt> could look like this:<div id="b31" class="comment-indicator has-comments" style="height: 20px; "><span>5</span></div></p>
+<pre class="cn literal-block" id="cn32">from mysite.books import views
+
+urlpatterns = patterns('',
+    # ...
+    (r'^search-form/$', views.search_form),
+    # ...
+)
+<div id="b32" class="comment-indicator" style="height: 141px; "><span></span></div></pre>
+<p class="cn" id="cn33">(Note that we’re importing the <tt class="docutils literal"><span class="pre">views</span></tt> module directly, instead of something
+like <tt class="docutils literal"><span class="pre">from</span> <span class="pre">mysite.views</span> <span class="pre">import</span> <span class="pre">search_form</span></tt>, because the former is less
+verbose. We’ll cover this importing approach in more detail in Chapter 8.)<div id="b33" class="comment-indicator has-comments" style="height: 57px; "><span>12</span></div></p>
+<p class="cn" id="cn34">Now, if you run the <tt class="docutils literal"><span class="pre">runserver</span></tt> and visit
+<tt class="docutils literal"><span class="pre">http://127.0.0.1:8000/search-form/</span></tt>, you’ll see the search interface. Simple
+enough.<div id="b34" class="comment-indicator has-comments" style="height: 38px; "><span>4</span></div></p>
+<!-- SL Tested ok -->
+<p class="cn" id="cn35">Try submitting the form, though, and you’ll get a Django 404 error. The form
+points to the URL <tt class="docutils literal"><span class="pre">/search/</span></tt>, which hasn’t yet been implemented. Let’s fix
+that with a second view function:<div id="b35" class="comment-indicator has-comments" style="height: 38px; "><span>25</span></div></p>
+<pre class="cn literal-block" id="cn36"># urls.py
+
+urlpatterns = patterns('',
+    # ...
+    (r'^search-form/$', views.search_form),
+    (r'^search/$', views.search),
+    # ...
+)
+
+# views.py
+
+def search(request):
+    if 'q' in request.GET:
+        message = 'You searched for: %r' % request.GET['q']
+    else:
+        message = 'You submitted an empty form.'
+    return HttpResponse(message)
+<div id="b36" class="comment-indicator" style="height: 331px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn37">For the moment, this merely displays the user’s search term, so we can make
+sure the data is being submitted to Django properly, and so you can get a feel
+for how the search term flows through the system. In short:<div id="b37" class="comment-indicator has-comments" style="height: 55px; "><span>8</span></div></p>
+<ol class="arabic simple">
+<li class="cn" id="cn38">The HTML <tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt> defines a variable <tt class="docutils literal"><span class="pre">q</span></tt>. When it’s submitted, the
+value of <tt class="docutils literal"><span class="pre">q</span></tt> is sent via <tt class="docutils literal"><span class="pre">GET</span></tt> (<tt class="docutils literal"><span class="pre">method="get"</span></tt>) to the URL
+<tt class="docutils literal"><span class="pre">/search/</span></tt>.<div id="b38" class="comment-indicator has-comments" style="height: 38px; "><span>5</span></div></li>
+<li class="cn" id="cn39">The Django view that handles the URL <tt class="docutils literal"><span class="pre">/search/</span></tt> (<tt class="docutils literal"><span class="pre">search()</span></tt>) has
+access to the <tt class="docutils literal"><span class="pre">q</span></tt> value in <tt class="docutils literal"><span class="pre">request.GET</span></tt>.<div id="b39" class="comment-indicator" style="height: 19px; "><span></span></div></li>
+</ol>
+<p class="cn" id="cn40">An important thing to point out here is that we explicitly check that <tt class="docutils literal"><span class="pre">'q'</span></tt>
+exists in <tt class="docutils literal"><span class="pre">request.GET</span></tt>. As we pointed out in the <tt class="docutils literal"><span class="pre">request.META</span></tt> section
+above, you shouldn’t trust anything submitted by users or even assume that
+they’ve submitted anything in the first place. If we didn’t add this check, any
+submission of an empty form would raise <tt class="docutils literal"><span class="pre">KeyError</span></tt> in the view:<div id="b40" class="comment-indicator has-comments" style="height: 76px; "><span>6</span></div></p>
+<pre class="cn literal-block" id="cn41"># BAD!
+def bad_search(request):
+    # The following line will raise KeyError if 'q' hasn't
+    # been submitted!
+    message = 'You searched for: %r' % request.GET['q']
+    return HttpResponse(message)
+<div id="b41" class="comment-indicator" style="height: 122px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<div class="admonition-query-string-parameters admonition cn admonition" id="cn42">
+<p class="first admonition-title">Query string parameters</p>
+<p class="last">Because <tt class="docutils literal"><span class="pre">GET</span></tt> data is passed in the query string (e.g.,
+<tt class="docutils literal"><span class="pre">/search/?q=django</span></tt>), you can use <tt class="docutils literal"><span class="pre">request.GET</span></tt> to access query string
+variables. In Chapter 3’s introduction of Django’s URLconf system, we
+compared Django’s pretty URLs to more traditional PHP/Java URLs such as
+<tt class="docutils literal"><span class="pre">/time/plus?hours=3</span></tt> and said we’d show you how to do the latter in
+Chapter 7. Now you know how to access query string parameters in your
+views (like <tt class="docutils literal"><span class="pre">hours=3</span></tt> in this example) — use <tt class="docutils literal"><span class="pre">request.GET</span></tt>.</p>
+<div id="b42" class="comment-indicator has-comments" style="height: 160px; "><span>1</span></div></div>
+<p class="cn" id="cn43"><tt class="docutils literal"><span class="pre">POST</span></tt> data works the same way as <tt class="docutils literal"><span class="pre">GET</span></tt> data — just use <tt class="docutils literal"><span class="pre">request.POST</span></tt>
+instead of <tt class="docutils literal"><span class="pre">request.GET</span></tt>. What’s the difference between <tt class="docutils literal"><span class="pre">GET</span></tt> and <tt class="docutils literal"><span class="pre">POST</span></tt>?
+Use <tt class="docutils literal"><span class="pre">GET</span></tt> when the act of submitting the form is just a request to “get”
+data. Use <tt class="docutils literal"><span class="pre">POST</span></tt> whenever the act of submitting the form will have some side
+effect — <em>changing</em> data, or sending an e-mail, or something else that’s
+beyond simple <em>display</em> of data. In our book-search example, we’re using
+<tt class="docutils literal"><span class="pre">GET</span></tt> because the query doesn’t change any data on our server. (See
+<a class="reference external" href="http://www.w3.org/2001/tag/doc/whenToUseGet.html">http://www.w3.org/2001/tag/doc/whenToUseGet.html</a> if you want to learn more
+about <tt class="docutils literal"><span class="pre">GET</span></tt> and <tt class="docutils literal"><span class="pre">POST</span></tt>.)<div id="b43" class="comment-indicator has-comments" style="height: 114px; "><span>6</span></div></p>
+<p class="cn" id="cn44">Now that we’ve verified <tt class="docutils literal"><span class="pre">request.GET</span></tt> is being passed in properly, let’s hook
+the user’s search query into our book database (again, in <tt class="docutils literal"><span class="pre">views.py</span></tt>):<div id="b44" class="comment-indicator has-comments" style="height: 39px; "><span>5</span></div></p>
+<pre class="cn literal-block" id="cn45">from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from mysite.books.models import Book
+
+def search(request):
+    if 'q' in request.GET and request.GET['q']:
+        q = request.GET['q']
+        books = Book.objects.filter(title__icontains=q)
+        return render_to_response('search_results.html',
+            {'books': books, 'query': q})
+    else:
+        return HttpResponse('Please submit a search term.')
+<div id="b45" class="comment-indicator" style="height: 236px; "><span></span></div></pre>
+<p class="cn" id="cn46">A couple of notes on what we did here:<div id="b46" class="comment-indicator" style="height: 19px; "><span></span></div></p>
+<ul>
+<li class="cn" id="cn47"><p class="first cn" id="cn48">Aside from checking that <tt class="docutils literal"><span class="pre">'q'</span></tt> exists in <tt class="docutils literal"><span class="pre">request.GET</span></tt>, we also make
+sure that <tt class="docutils literal"><span class="pre">request.GET['q']</span></tt> is a non-empty value before passing it to
+the database query.<div id="b48" class="comment-indicator" style="height: 38px; "><span></span></div></p>
+<div id="b47" class="comment-indicator has-comments" style="height: 38px; "><span>5</span></div></li>
+<li class="cn" id="cn49"><p class="first cn" id="cn50">We’re using <tt class="docutils literal"><span class="pre">Book.objects.filter(title__icontains=q)</span></tt> to query our
+book table for all books whose title includes the given submission. The
+<tt class="docutils literal"><span class="pre">icontains</span></tt> is a lookup type (as explained in Chapter 5 and Appendix
+B), and the statement can be roughly translated as “Get the books whose
+title contains <tt class="docutils literal"><span class="pre">q</span></tt>, without being case-sensitive.”<div id="b50" class="comment-indicator" style="height: 76px; "><span></span></div></p>
+<p class="cn" id="cn51">This is a very simple way to do a book search. We wouldn’t recommend
+using a simple <tt class="docutils literal"><span class="pre">icontains</span></tt> query on a large production database, as
+it can be slow. (In the real world, you’d want to use a custom search
+system of some sort. Search the Web for <em>open-source full-text search</em>
+to get an idea of the possibilities.)<div id="b51" class="comment-indicator" style="height: 74px; "><span></span></div></p>
+<div id="b49" class="comment-indicator has-comments" style="height: 162px; "><span>3</span></div></li>
+<li class="cn" id="cn52"><p class="first cn" id="cn53">We pass <tt class="docutils literal"><span class="pre">books</span></tt>, a list of <tt class="docutils literal"><span class="pre">Book</span></tt> objects, to the template. The
+template code for <tt class="docutils literal"><span class="pre">search_results.html</span></tt> might include something like
+this:<div id="b53" class="comment-indicator" style="height: 38px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn54">&lt;p&gt;You searched for: &lt;strong&gt;{{ query }}&lt;/strong&gt;&lt;/p&gt;
+
+{% if books %}
+    &lt;p&gt;Found {{ books|length }} book{{ books|pluralize }}.&lt;/p&gt;
+    &lt;ul&gt;
+        {% for book in books %}
+        &lt;li&gt;{{ book.title }}&lt;/li&gt;
+        {% endfor %}
+    &lt;/ul&gt;
+{% else %}
+    &lt;p&gt;No books matched your search criteria.&lt;/p&gt;
+{% endif %}
+<div id="b54" class="comment-indicator" style="height: 236px; "><span></span></div></pre>
+<p class="cn" id="cn55">Note usage of the <tt class="docutils literal"><span class="pre">pluralize</span></tt> template filter, which outputs an “s”
+if appropriate, based on the number of books found.<div id="b55" class="comment-indicator" style="height: 38px; "><span></span></div></p>
+<div id="b52" class="comment-indicator has-comments" style="height: 338px; "><span>5</span></div></li>
+</ul>
+<!-- SL Tested ok -->
+</div>
+<div class="section" id="s-improving-our-simple-form-handling-example">
+<h3 class="cn" id="cn56">Improving Our Simple Form-Handling Example<div id="b56" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn57">As in previous chapters, we’ve shown you the simplest thing that could possibly
+work. Now we’ll point out some problems and show you how to improve it.<div id="b57" class="comment-indicator" style="height: 37px; "><span></span></div></p>
+<p class="cn" id="cn58">First, our <tt class="docutils literal"><span class="pre">search()</span></tt> view’s handling of an empty query is poor — we’re just
+displaying a <tt class="docutils literal"><span class="pre">"Please</span> <span class="pre">submit</span> <span class="pre">a</span> <span class="pre">search</span> <span class="pre">term."</span></tt> message, requiring the user to
+hit the browser’s back button. This is horrid and unprofessional, and if you
+ever actually implement something like this in the wild, your Django privileges
+will be revoked.<div id="b58" class="comment-indicator has-comments" style="height: 75px; "><span>20</span></div></p>
+<p class="cn" id="cn59">It would be much better to redisplay the form, with an error above it, so that
+the user can try again immediately. The easiest way to do that would be to
+render the template again, like this:<div id="b59" class="comment-indicator has-comments" style="height: 37px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn60">from django.http import HttpResponse
+from django.shortcuts import render_to_response
+from mysite.books.models import Book
+
+def search_form(request):
+    return render_to_response('search_form.html')
+
+def search(request):
+    if 'q' in request.GET and request.GET['q']:
+        q = request.GET['q']
+        books = Book.objects.filter(title__icontains=q)
+        return render_to_response('search_results.html',
+            {'books': books, 'query': q})
+    else:
+        <strong>return render_to_response('search_form.html', {'error': True})</strong>
+<div id="b60" class="comment-indicator" style="height: 293px; "><span></span></div></pre>
+<p class="cn" id="cn61">(Note that we’ve included <tt class="docutils literal"><span class="pre">search_form()</span></tt> here so you can see both views in
+one place.)<div id="b61" class="comment-indicator" style="height: 20px; "><span></span></div></p>
+<p class="cn" id="cn62">Here, we’ve improved <tt class="docutils literal"><span class="pre">search()</span></tt> to render the <tt class="docutils literal"><span class="pre">search_form.html</span></tt> template
+again, if the query is empty. And because we need to display an error message
+in that template, we pass a template variable. Now we can edit
+<tt class="docutils literal"><span class="pre">search_form.html</span></tt> to check for the <tt class="docutils literal"><span class="pre">error</span></tt> variable:<div id="b62" class="comment-indicator" style="height: 57px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn63">&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Search&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    <strong>{% if error %}</strong>
+        <strong>&lt;p style="color: red;"&gt;Please submit a search term.&lt;/p&gt;</strong>
+    <strong>{% endif %}</strong>
+    &lt;form action="/search/" method="get"&gt;
+        &lt;input type="text" name="q"&gt;
+        &lt;input type="submit" value="Search"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b63" class="comment-indicator has-comments" style="height: 274px; "><span>1</span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn64">We can still use this template from our original view, <tt class="docutils literal"><span class="pre">search_form()</span></tt>,
+because <tt class="docutils literal"><span class="pre">search_form()</span></tt> doesn’t pass <tt class="docutils literal"><span class="pre">error</span></tt> to the template — so the
+error message won’t show up in that case.<div id="b64" class="comment-indicator" style="height: 39px; "><span></span></div></p>
+<p class="cn" id="cn65">With this change in place, it’s a better application, but it now begs the
+question: is a dedicated <tt class="docutils literal"><span class="pre">search_form()</span></tt> view really necessary? As it stands,
+a request to the URL <tt class="docutils literal"><span class="pre">/search/</span></tt> (without any <tt class="docutils literal"><span class="pre">GET</span></tt> parameters) will display
+the empty form (but with an error). We can remove the <tt class="docutils literal"><span class="pre">search_form()</span></tt> view,
+along with its associated URLpattern, as long as we change <tt class="docutils literal"><span class="pre">search()</span></tt> to
+hide the error message when somebody visits <tt class="docutils literal"><span class="pre">/search/</span></tt> with no <tt class="docutils literal"><span class="pre">GET</span></tt>
+parameters:<div id="b65" class="comment-indicator has-comments" style="height: 95px; "><span>11</span></div></p>
+<pre class="cn literal-block" id="cn66">def search(request):
+    error = False
+    if 'q' in request.GET:
+        q = request.GET['q']
+        if not q:
+            error = True
+        else:
+            books = Book.objects.filter(title__icontains=q)
+            return render_to_response('search_results.html',
+                {'books': books, 'query': q})
+    return render_to_response('search_form.html',
+        {'error': error})
+<div id="b66" class="comment-indicator" style="height: 236px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn67">In this updated view, if a user visits <tt class="docutils literal"><span class="pre">/search/</span></tt> with no <tt class="docutils literal"><span class="pre">GET</span></tt> parameters,
+he’ll see the search form with no error message. If a user submits the form
+with an empty value for <tt class="docutils literal"><span class="pre">'q'</span></tt>, he’ll see the search form <em>with</em> an error
+message. And, finally, if a user submits the form with a non-empty value for
+<tt class="docutils literal"><span class="pre">'q'</span></tt>, he’ll see the search results.<div id="b67" class="comment-indicator has-comments" style="height: 76px; "><span>2</span></div></p>
+<p class="cn" id="cn68">We can make one final improvement to this application, to remove a bit of
+redundancy. Now that we’ve rolled the two views and URLs into one and
+<tt class="docutils literal"><span class="pre">/search/</span></tt> handles both search-form display and result display, the HTML
+<tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt> in <tt class="docutils literal"><span class="pre">search_form.html</span></tt> doesn’t have to hard-code a URL. Instead
+of this:<div id="b68" class="comment-indicator" style="height: 57px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn69">&lt;form action="/search/" method="get"&gt;
+<div id="b69" class="comment-indicator" style="height: 27px; "><span></span></div></pre>
+<p class="cn" id="cn70">It can be changed to this:<div id="b70" class="comment-indicator has-comments" style="height: 19px; "><span>9</span></div></p>
+<pre class="cn literal-block" id="cn71">&lt;form action="" method="get"&gt;
+<div id="b71" class="comment-indicator" style="height: 27px; "><span></span></div></pre>
+<p class="cn" id="cn72">The <tt class="docutils literal"><span class="pre">action=""</span></tt> means “Submit the form to the same URL as the current page.”
+With this change in place, you won’t have to remember to change the <tt class="docutils literal"><span class="pre">action</span></tt>
+if you ever hook the <tt class="docutils literal"><span class="pre">search()</span></tt> view to another URL.<div id="b72" class="comment-indicator" style="height: 39px; "><span></span></div></p>
+</div>
+<div class="section" id="s-simple-validation">
+<h3 class="cn" id="cn73">Simple validation<div id="b73" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn74">Our search example is still reasonably simple, particularly in terms of its
+data validation; we’re merely checking to make sure the search query isn’t
+empty. Many HTML forms include a level of validation that’s more complex than
+making sure the value is non-empty. We’ve all seen the error messages on Web
+sites:<div id="b74" class="comment-indicator" style="height: 55px; "><span></span></div></p>
+<ul class="simple">
+<li class="cn" id="cn75">“Please enter a valid e-mail address. ‘foo’ is not an e-mail address.”<div id="b75" class="comment-indicator" style="height: 18px; "><span></span></div></li>
+<li class="cn" id="cn76">“Please enter a valid five-digit U.S. ZIP code. ‘123’ is not a ZIP code.”<div id="b76" class="comment-indicator" style="height: 18px; "><span></span></div></li>
+<li class="cn" id="cn77">“Please enter a valid date in the format YYYY-MM-DD.”<div id="b77" class="comment-indicator" style="height: 18px; "><span></span></div></li>
+<li class="cn" id="cn78">“Please enter a password that is at least 8 characters long and contains
+at least one number.”<div id="b78" class="comment-indicator" style="height: 18px; "><span></span></div></li>
+</ul>
+<div class="admonition-a-note-on-javascript-validation admonition cn admonition" id="cn79">
+<p class="first admonition-title">A note on JavaScript validation</p>
+<p>This is beyond the scope of this book, but you can use JavaScript to
+validate data on the client side, directly in the browser. But be warned:
+even if you do this, you <em>must</em> validate data on the server side, too. Some
+people have JavaScript turned off, and some malicious users might submit
+raw, unvalidated data directly to your form handler to see whether they can
+cause mischief.</p>
+<p class="last">There’s nothing you can do about this, other than <em>always</em> validate
+user-submitted data server-side (i.e., in your Django views). You should
+think of JavaScript validation as a bonus usability feature, not as your
+only means of validating.</p>
+<div id="b79" class="comment-indicator" style="height: 204px; "><span></span></div></div>
+<p class="cn" id="cn80">Let’s tweak our <tt class="docutils literal"><span class="pre">search()</span></tt> view so that it validates that the search term is
+less than or equal to 20 characters long. (For sake of example, let’s say
+anything longer than that might make the query too slow.) How might we do that?
+The simplest possible thing would be to embed the logic directly in the view,
+like this:<div id="b80" class="comment-indicator has-comments" style="height: 74px; "><span>1</span></div></p>
+<pre class="cn literal-block" id="cn81">def search(request):
+    error = False
+    if 'q' in request.GET:
+        q = request.GET['q']
+        if not q:
+            error = True
+        <strong>elif len(q) &gt; 20:</strong>
+            <strong>error = True</strong>
+        else:
+            books = Book.objects.filter(title__icontains=q)
+            return render_to_response('search_results.html',
+                {'books': books, 'query': q})
+    return render_to_response('search_form.html',
+        {'error': error})
+<div id="b81" class="comment-indicator" style="height: 274px; "><span></span></div></pre>
+<p class="cn" id="cn82">Now, if you try submitting a search query greater than 20 characters long,
+it won’t let you search; you’ll get an error message. But that error message
+in <tt class="docutils literal"><span class="pre">search_form.html</span></tt> currently says <tt class="docutils literal"><span class="pre">"Please</span> <span class="pre">submit</span> <span class="pre">a</span> <span class="pre">search</span> <span class="pre">term."</span></tt> —
+so we’ll have to change it to be accurate for both cases:<div id="b82" class="comment-indicator has-comments" style="height: 57px; "><span>4</span></div></p>
+<pre class="cn literal-block" id="cn83">&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Search&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    {% if error %}
+        &lt;p style="color: red;"&gt;Please submit a search term 20 characters or shorter.&lt;/p&gt;
+    {% endif %}
+    &lt;form action="/search/" method="get"&gt;
+        &lt;input type="text" name="q"&gt;
+        &lt;input type="submit" value="Search"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b83" class="comment-indicator" style="height: 274px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn84">There’s something ugly about this. Our one-size-fits-all error message is
+potentially confusing. Why should the error message for an empty form
+submission mention anything about a 20-character limit? Error messages should
+be specific, unambiguous and not confusing.<div id="b84" class="comment-indicator has-comments" style="height: 55px; "><span>3</span></div></p>
+<p class="cn" id="cn85">The problem is in the fact that we’re using a simple boolean value for
+<tt class="docutils literal"><span class="pre">error</span></tt>, whereas we should be using a <em>list</em> of error message strings. Here’s
+how we might fix that:<div id="b85" class="comment-indicator has-comments" style="height: 38px; "><span>5</span></div></p>
+<pre class="cn literal-block" id="cn86">def search(request):
+    <strong>errors = []</strong>
+    if 'q' in request.GET:
+        q = request.GET['q']
+        if not q:
+            <strong>errors.append('Enter a search term.')</strong>
+        elif len(q) &gt; 20:
+            <strong>errors.append('Please enter at most 20 characters.')</strong>
+        else:
+            books = Book.objects.filter(title__icontains=q)
+            return render_to_response('search_results.html',
+                {'books': books, 'query': q})
+    return render_to_response('search_form.html',
+        {<strong>'errors': errors</strong>})
+<div id="b86" class="comment-indicator" style="height: 274px; "><span></span></div></pre>
+<p class="cn" id="cn87">Then, we need make a small tweak to the <tt class="docutils literal"><span class="pre">search_form.html</span></tt> template to
+reflect that it’s now passed an <tt class="docutils literal"><span class="pre">errors</span></tt> list instead of an <tt class="docutils literal"><span class="pre">error</span></tt> boolean
+value:<div id="b87" class="comment-indicator has-comments" style="height: 39px; "><span>8</span></div></p>
+<pre class="cn literal-block" id="cn88">&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Search&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    <strong>{% if errors %}</strong>
+        <strong>&lt;ul&gt;</strong>
+            <strong>{% for error in errors %}</strong>
+            <strong>&lt;li&gt;{{ error }}&lt;/li&gt;</strong>
+            <strong>{% endfor %}</strong>
+        <strong>&lt;/ul&gt;</strong>
+    <strong>{% endif %}</strong>
+    &lt;form action="/search/" method="get"&gt;
+        &lt;input type="text" name="q"&gt;
+        &lt;input type="submit" value="Search"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b88" class="comment-indicator" style="height: 350px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+</div>
+<div class="section" id="s-making-a-contact-form">
+<h3 class="cn" id="cn89">Making a Contact Form<div id="b89" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn90">Although we iterated over the book search form example several times and
+improved it nicely, it’s still fundamentally simple: just a single field,
+<tt class="docutils literal"><span class="pre">'q'</span></tt>. Because it’s so simple, we didn’t even use Django’s form library to
+deal with it. But more complex forms call for more complex treatment — and now
+we’ll develop something more complex: a site contact form.<div id="b90" class="comment-indicator" style="height: 74px; "><span></span></div></p>
+<p class="cn" id="cn91">This will be a form that lets site users submit a bit of feedback, along with
+an optional e-mail return address. After the form is submitted and the
+data is validated, we’ll automatically send the message via e-mail to the site
+staff.<div id="b91" class="comment-indicator" style="height: 55px; "><span></span></div></p>
+<p class="cn" id="cn92">We’ll start with our template, <tt class="docutils literal"><span class="pre">contact_form.html</span></tt>.<div id="b92" class="comment-indicator has-comments" style="height: 20px; "><span>6</span></div></p>
+<pre class="cn literal-block" id="cn93">&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Contact us&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Contact us&lt;/h1&gt;
+
+    {% if errors %}
+        &lt;ul&gt;
+            {% for error in errors %}
+            &lt;li&gt;{{ error }}&lt;/li&gt;
+            {% endfor %}
+        &lt;/ul&gt;
+    {% endif %}
+
+    &lt;form action="/contact/" method="post"&gt;
+        &lt;p&gt;Subject: &lt;input type="text" name="subject"&gt;&lt;/p&gt;
+        &lt;p&gt;Your e-mail (optional): &lt;input type="text" name="email"&gt;&lt;/p&gt;
+        &lt;p&gt;Message: &lt;textarea name="message" rows="10" cols="50"&gt;&lt;/textarea&gt;&lt;/p&gt;
+        &lt;input type="submit" value="Submit"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b93" class="comment-indicator" style="height: 445px; "><span></span></div></pre>
+<p class="cn" id="cn94">We’ve defined three fields: the subject, e-mail address and message. The second
+is optional, but the other two fields are required. Note we’re using
+<tt class="docutils literal"><span class="pre">method="post"</span></tt> here instead of <tt class="docutils literal"><span class="pre">method="get"</span></tt> because this form submission
+has a side effect — it sends an e-mail. Also, we copied the error-displaying
+code from our previous template <tt class="docutils literal"><span class="pre">search_form.html</span></tt>.<div id="b94" class="comment-indicator" style="height: 75px; "><span></span></div></p>
+<p class="cn" id="cn95">If we continue down the road established by our <tt class="docutils literal"><span class="pre">search()</span></tt> view from the
+previous section, a naive version of our <tt class="docutils literal"><span class="pre">contact()</span></tt> view might look like
+this:<div id="b95" class="comment-indicator has-comments" style="height: 39px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn96">from django.core.mail import send_mail
+from django.http import HttpResponseRedirect
+from django.shortcuts import render_to_response
+
+def contact(request):
+    errors = []
+    if request.method == 'POST':
+        if not request.POST.get('subject', ''):
+            errors.append('Enter a subject.')
+        if not request.POST.get('message', ''):
+            errors.append('Enter a message.')
+        if request.POST.get('email') and '@' not in request.POST['email']:
+            errors.append('Enter a valid e-mail address.')
+        if not errors:
+            send_mail(
+                request.POST['subject'],
+                request.POST['message'],
+                request.POST.get('email', 'noreply@example.com'),
+                ['siteowner@example.com'],
+            )
+            return HttpResponseRedirect('/contact/thanks/')
+    return render_to_response('contact_form.html',
+        {'errors': errors})
+<div id="b96" class="comment-indicator" style="height: 445px; "><span></span></div></pre>
+<!-- SL Tested ok (modulo email config and lack of thanks view) -->
+<p class="cn" id="cn97">(If you’re following along, you may be wondering whether to put this view in
+the <tt class="docutils literal"><span class="pre">books/views.py</span></tt> file. It doesn’t have anything to do with the books
+application, so should it live elsewhere? It’s totally up to you; Django
+doesn’t care, as long as you’re able to point to the view from your URLconf.
+Our personal preference would be to create a separate directory, <tt class="docutils literal"><span class="pre">contact</span></tt>,
+at the same level in the directory tree as <tt class="docutils literal"><span class="pre">books</span></tt>. This would contain an
+empty <tt class="docutils literal"><span class="pre">__init__.py</span></tt> and <tt class="docutils literal"><span class="pre">views.py</span></tt>.)<div id="b97" class="comment-indicator has-comments" style="height: 94px; "><span>13</span></div></p>
+<p class="cn" id="cn98">A couple of new things are happening here:<div id="b98" class="comment-indicator" style="height: 19px; "><span></span></div></p>
+<ul>
+<li class="cn" id="cn99"><p class="first cn" id="cn100">We’re checking that <tt class="docutils literal"><span class="pre">request.method</span></tt> is <tt class="docutils literal"><span class="pre">'POST'</span></tt>. This will only be
+true in the case of a form submission; it won’t be true if somebody is
+merely viewing the contact form. (In the latter case,
+<tt class="docutils literal"><span class="pre">request.method</span> <span class="pre">will</span> <span class="pre">be</span> <span class="pre">set</span> <span class="pre">to</span> <span class="pre">'GET'</span></tt>, because in normal Web browsing,
+browsers use <tt class="docutils literal"><span class="pre">GET</span></tt>, not <tt class="docutils literal"><span class="pre">POST</span></tt>.) This makes it a nice way to isolate
+the “form display” case from the “form processing” case.<div id="b100" class="comment-indicator" style="height: 75px; "><span></span></div></p>
+<div id="b99" class="comment-indicator has-comments" style="height: 75px; "><span>4</span></div></li>
+<li class="cn" id="cn101"><p class="first cn" id="cn102">Instead of <tt class="docutils literal"><span class="pre">request.GET</span></tt>, we’re using <tt class="docutils literal"><span class="pre">request.POST</span></tt> to access the
+submitted form data. This is necessary because the HTML <tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt> in
+<tt class="docutils literal"><span class="pre">contact_form.html</span></tt> uses <tt class="docutils literal"><span class="pre">method="post"</span></tt>. If this view is accessed
+via <tt class="docutils literal"><span class="pre">POST</span></tt>, then <tt class="docutils literal"><span class="pre">request.GET</span></tt> will be empty.<div id="b102" class="comment-indicator" style="height: 58px; "><span></span></div></p>
+<div id="b101" class="comment-indicator" style="height: 58px; "><span></span></div></li>
+<li class="cn" id="cn103"><p class="first cn" id="cn104">This time, we have <em>two</em> required fields, <tt class="docutils literal"><span class="pre">subject</span></tt> and <tt class="docutils literal"><span class="pre">message</span></tt>, so
+we have to validate both. Note that we’re using <tt class="docutils literal"><span class="pre">request.POST.get()</span></tt>
+and providing a blank string as the default value; this is a nice, short
+way of handling both the cases of missing keys and missing data.<div id="b104" class="comment-indicator" style="height: 57px; "><span></span></div></p>
+<div id="b103" class="comment-indicator has-comments" style="height: 57px; "><span>4</span></div></li>
+<li class="cn" id="cn105"><p class="first cn" id="cn106">Although the <tt class="docutils literal"><span class="pre">email</span></tt> field is not required, we still validate it if it
+is indeed submitted. Our validation algorithm here is fragile — we’re
+just checking that the string contains an <tt class="docutils literal"><span class="pre">@</span></tt> character. In the real
+world, you’d want more robust validation (and Django provides it, which
+we’ll show you very shortly).<div id="b106" class="comment-indicator" style="height: 57px; "><span></span></div></p>
+<div id="b105" class="comment-indicator has-comments" style="height: 57px; "><span>8</span></div></li>
+<li class="cn" id="cn107"><p class="first cn" id="cn108">We’re using the function <tt class="docutils literal"><span class="pre">django.core.mail.send_mail</span></tt> to send an
+e-mail. This function has four required arguments: the e-mail subject,
+the e-mail body, the “from” address, and a list of recipient addresses.
+<tt class="docutils literal"><span class="pre">send_mail</span></tt> is a convenient wrapper around Django’s <tt class="docutils literal"><span class="pre">EmailMessage</span></tt>
+class, which provides advanced features such as attachments, multipart
+e-mails, and full control over e-mail headers.<div id="b108" class="comment-indicator" style="height: 75px; "><span></span></div></p>
+<p class="cn" id="cn109">Note that in order to send e-mail using <tt class="docutils literal"><span class="pre">send_mail()</span></tt>, your server must
+be configured to send mail, and Django must be told about your outbound
+e-mail server. See <a class="reference external" href="http://docs.djangoproject.com/en/dev/topics/email/">http://docs.djangoproject.com/en/dev/topics/email/</a> for
+the specifics.<div id="b109" class="comment-indicator" style="height: 56px; "><span></span></div></p>
+<div id="b107" class="comment-indicator has-comments" style="height: 143px; "><span>4</span></div></li>
+<li class="cn" id="cn110"><p class="first cn" id="cn111">After the e-mail is sent, we redirect to a “success” page by returning an
+<tt class="docutils literal"><span class="pre">HttpResponseRedirect</span></tt> object. We’ll leave the implementation of that
+“success” page up to you (it’s a simple view/URLconf/template), but we
+should explain why we initiate a redirect instead of, for example, simply
+calling <tt class="docutils literal"><span class="pre">render_to_response()</span></tt> with a template right there.<div id="b111" class="comment-indicator" style="height: 75px; "><span></span></div></p>
+<p class="cn" id="cn112">The reason: if a user hits “Refresh” on a page that was loaded via
+<tt class="docutils literal"><span class="pre">POST</span></tt>, that request will be repeated. This can often lead to undesired
+behavior, such as a duplicate record being added to the database — or,
+in our example, the e-mail being sent twice. If the user is redirected to
+another page after the <tt class="docutils literal"><span class="pre">POST</span></tt>, then there’s no chance of repeating the
+request.<div id="b112" class="comment-indicator" style="height: 75px; "><span></span></div></p>
+<p class="cn" id="cn113">You should <em>always</em> issue a redirect for successful <tt class="docutils literal"><span class="pre">POST</span></tt> requests.
+It’s a Web development best practice.<div id="b113" class="comment-indicator" style="height: 20px; "><span></span></div></p>
+<div id="b110" class="comment-indicator has-comments" style="height: 194px; "><span>22</span></div></li>
+</ul>
+<p class="cn" id="cn114">This view works, but those validation functions are kind of crufty. Imagine
+processing a form with a dozen fields; would you really want to have to write
+all of those <tt class="docutils literal"><span class="pre">if</span></tt> statements?<div id="b114" class="comment-indicator has-comments" style="height: 38px; "><span>2</span></div></p>
+<p class="cn" id="cn115">Another problem is <em>form redisplay</em>. In the case of validation errors, it’s
+best practice to redisplay the form <em>with</em> the previously submitted data
+already filled in, so the user can see what he did wrong (and also so the user
+doesn’t have to reenter data in fields that were submitted correctly). We
+<em>could</em> manually pass the <tt class="docutils literal"><span class="pre">POST</span></tt> data back to the template, but we’d have to
+edit each HTML field to insert the proper value in the proper place:<div id="b115" class="comment-indicator" style="height: 92px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn116"># views.py
+
+def contact(request):
+    errors = []
+    if request.method == 'POST':
+        if not request.POST.get('subject', ''):
+            errors.append('Enter a subject.')
+        if not request.POST.get('message', ''):
+            errors.append('Enter a message.')
+        if request.POST.get('email') and '@' not in request.POST['email']:
+            errors.append('Enter a valid e-mail address.')
+        if not errors:
+            send_mail(
+                request.POST['subject'],
+                request.POST['message'],
+                request.POST.get('email', <a class="reference external" href="mailto:'noreply@example.com">'noreply@example.com</a>'),
+                [<a class="reference external" href="mailto:'siteowner@example.com">'siteowner@example.com</a>'],
+            )
+            return HttpResponseRedirect('/contact/thanks/')
+    return render_to_response('contact_form.html', {
+        'errors': errors,
+        <strong>'subject': request.POST.get('subject', ''),</strong>
+        <strong>'message': request.POST.get('message', ''),</strong>
+        <strong>'email': request.POST.get('email', ''),</strong>
+    })
+
+# contact_form.html
+
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Contact us&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Contact us&lt;/h1&gt;
+
+    {% if errors %}
+        &lt;ul&gt;
+            {% for error in errors %}
+            &lt;li&gt;{{ error }}&lt;/li&gt;
+            {% endfor %}
+        &lt;/ul&gt;
+    {% endif %}
+
+    &lt;form action="/contact/" method="post"&gt;
+        &lt;p&gt;Subject: &lt;input type="text" name="subject" <strong>value="{{ subject }}"</strong>&gt;&lt;/p&gt;
+        &lt;p&gt;Your e-mail (optional): &lt;input type="text" name="email" <strong>value="{{ email }}"</strong>&gt;&lt;/p&gt;
+        &lt;p&gt;Message: &lt;textarea name="message" rows="10" cols="50"&gt;**{{ message }}**&lt;/textarea&gt;&lt;/p&gt;
+        &lt;input type="submit" value="Submit"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b116" class="comment-indicator" style="height: 977px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn117">This is a lot of cruft, and it introduces a lot of opportunities for human
+error. We hope you’re starting to see the opportunity for some higher-level
+library that handles form- and validation-related tasks.<div id="b117" class="comment-indicator has-comments" style="height: 37px; "><span>11</span></div></p>
+</div>
+<div class="section" id="s-your-first-form-class">
+<h3 class="cn" id="cn118">Your First Form Class<div id="b118" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn119">Django comes with a form library, called <tt class="docutils literal"><span class="pre">django.forms</span></tt>, that handles many of
+the issues we’ve been exploring this chapter — from HTML form display to
+validation. Let’s dive in and rework our contact form application using the
+Django forms framework.<div id="b119" class="comment-indicator has-comments" style="height: 56px; "><span>8</span></div></p>
+<div class="admonition-django-s-newforms-library admonition cn admonition" id="cn120">
+<p class="first admonition-title">Django’s “newforms” library</p>
+<p>Throughout the Django community, you might see chatter about something
+called <tt class="docutils literal"><span class="pre">django.newforms</span></tt>. When people speak of <tt class="docutils literal"><span class="pre">django.newforms</span></tt>,
+they’re talking about what is now <tt class="docutils literal"><span class="pre">django.forms</span></tt> — the library covered by
+this chapter.</p>
+<p class="last">The reason for this name change is historic. When Django was first released
+to the public, it had a complicated, confusing forms system,
+<tt class="docutils literal"><span class="pre">django.forms</span></tt>. It was completely rewritten, and the new version was
+called <tt class="docutils literal"><span class="pre">django.newforms</span></tt> so that people could still use the old system.
+When Django 1.0 was released, the old <tt class="docutils literal"><span class="pre">django.forms</span></tt> went away, and
+<tt class="docutils literal"><span class="pre">django.newforms</span></tt> became <tt class="docutils literal"><span class="pre">django.forms</span></tt>.</p>
+<div id="b120" class="comment-indicator has-comments" style="height: 210px; "><span>2</span></div></div>
+<p class="cn" id="cn121">The primary way to use the forms framework is to define a <tt class="docutils literal"><span class="pre">Form</span></tt> class for
+each HTML <tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt> you’re dealing with. In our case, we only have one
+<tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt>, so we’ll have one <tt class="docutils literal"><span class="pre">Form</span></tt> class. This class can live anywhere you
+want — including directly in your <tt class="docutils literal"><span class="pre">views.py</span></tt> file — but community
+convention is to keep <tt class="docutils literal"><span class="pre">Form</span></tt> classes in a separate file called <tt class="docutils literal"><span class="pre">forms.py</span></tt>.
+Create this file in the same directory as your <tt class="docutils literal"><span class="pre">views.py</span></tt>, and enter the
+following:<div id="b121" class="comment-indicator has-comments" style="height: 95px; "><span>8</span></div></p>
+<pre class="cn literal-block" id="cn122">from django import forms
+
+class ContactForm(forms.Form):
+    subject = forms.CharField()
+    email = forms.EmailField(required=False)
+    message = forms.CharField()
+<div id="b122" class="comment-indicator" style="height: 122px; "><span></span></div></pre>
+<p class="cn" id="cn123">This is pretty intuitive, and it’s similar to Django’s model syntax. Each field
+in the form is represented by a type of <tt class="docutils literal"><span class="pre">Field</span></tt> class — <tt class="docutils literal"><span class="pre">CharField</span></tt> and
+<tt class="docutils literal"><span class="pre">EmailField</span></tt> are the only types of fields used here — as attributes of a
+<tt class="docutils literal"><span class="pre">Form</span></tt> class. Each field is required by default, so to make <tt class="docutils literal"><span class="pre">email</span></tt>
+optional, we specify <tt class="docutils literal"><span class="pre">required=False</span></tt>.<div id="b123" class="comment-indicator has-comments" style="height: 57px; "><span>1</span></div></p>
+<p class="cn" id="cn124">Let’s hop into the Python interactive interpreter and see what this class can
+do. The first thing it can do is display itself as HTML:<div id="b124" class="comment-indicator has-comments" style="height: 37px; "><span>6</span></div></p>
+<pre class="cn literal-block" id="cn125">&gt;&gt;&gt; from contact.forms import ContactForm
+&gt;&gt;&gt; f = ContactForm()
+&gt;&gt;&gt; print f
+&lt;tr&gt;&lt;th&gt;&lt;label for="id_subject"&gt;Subject:&lt;/label&gt;&lt;/th&gt;&lt;td&gt;&lt;input type="text" name="subject" id="id_subject" /&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;th&gt;&lt;label for="id_email"&gt;Email:&lt;/label&gt;&lt;/th&gt;&lt;td&gt;&lt;input type="text" name="email" id="id_email" /&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;th&gt;&lt;label for="id_message"&gt;Message:&lt;/label&gt;&lt;/th&gt;&lt;td&gt;&lt;input type="text" name="message" id="id_message" /&gt;&lt;/td&gt;&lt;/tr&gt;
+<div id="b125" class="comment-indicator" style="height: 122px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn126">Django adds a label to each field, along with <tt class="docutils literal"><span class="pre">&lt;label&gt;</span></tt> tags for
+accessibility. The idea is to make the default behavior as optimal as possible.<div id="b126" class="comment-indicator has-comments" style="height: 38px; "><span>7</span></div></p>
+<p class="cn" id="cn127">This default output is in the format of an HTML <tt class="docutils literal"><span class="pre">&lt;table&gt;</span></tt>, but there are a
+few other built-in outputs:<div id="b127" class="comment-indicator has-comments" style="height: 20px; "><span>1</span></div></p>
+<pre class="cn literal-block" id="cn128">&gt;&gt;&gt; print f.as_ul()
+&lt;li&gt;&lt;label for="id_subject"&gt;Subject:&lt;/label&gt; &lt;input type="text" name="subject" id="id_subject" /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label for="id_email"&gt;Email:&lt;/label&gt; &lt;input type="text" name="email" id="id_email" /&gt;&lt;/li&gt;
+&lt;li&gt;&lt;label for="id_message"&gt;Message:&lt;/label&gt; &lt;input type="text" name="message" id="id_message" /&gt;&lt;/li&gt;
+&gt;&gt;&gt; print f.as_p()
+&lt;p&gt;&lt;label for="id_subject"&gt;Subject:&lt;/label&gt; &lt;input type="text" name="subject" id="id_subject" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;label for="id_email"&gt;Email:&lt;/label&gt; &lt;input type="text" name="email" id="id_email" /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;label for="id_message"&gt;Message:&lt;/label&gt; &lt;input type="text" name="message" id="id_message" /&gt;&lt;/p&gt;
+<div id="b128" class="comment-indicator" style="height: 160px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn129">Note that the opening and closing <tt class="docutils literal"><span class="pre">&lt;table&gt;</span></tt>, <tt class="docutils literal"><span class="pre">&lt;ul&gt;</span></tt> and <tt class="docutils literal"><span class="pre">&lt;form&gt;</span></tt> tags
+aren’t included in the output, so that you can add any additional rows and
+customization if necessary.<div id="b129" class="comment-indicator" style="height: 38px; "><span></span></div></p>
+<p class="cn" id="cn130">These methods are just shortcuts for the common case of “display the entire
+form.” You can also display the HTML for a particular field:<div id="b130" class="comment-indicator" style="height: 37px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn131">&gt;&gt;&gt; print f['subject']
+&lt;input type="text" name="subject" id="id_subject" /&gt;
+&gt;&gt;&gt; print f['message']
+&lt;input type="text" name="message" id="id_message" /&gt;
+<div id="b131" class="comment-indicator" style="height: 84px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn132">The second thing <tt class="docutils literal"><span class="pre">Form</span></tt> objects can do is validate data. To validate data,
+create a new <tt class="docutils literal"><span class="pre">Form</span></tt> object and pass it a dictionary of data that maps field
+names to data:<div id="b132" class="comment-indicator has-comments" style="height: 38px; "><span>7</span></div></p>
+<pre class="cn literal-block" id="cn133">&gt;&gt;&gt; f = ContactForm({'subject': 'Hello', 'email': 'adrian@example.com', 'message': 'Nice site!'})
+<div id="b133" class="comment-indicator" style="height: 27px; "><span></span></div></pre>
+<p class="cn" id="cn134">Once you’ve associated data with a <tt class="docutils literal"><span class="pre">Form</span></tt> instance, you’ve created a “bound”
+form:<div id="b134" class="comment-indicator has-comments" style="height: 20px; "><span>1</span></div></p>
+<pre class="cn literal-block" id="cn135">&gt;&gt;&gt; f.is_bound
+True
+<div id="b135" class="comment-indicator" style="height: 46px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn136">Call the <tt class="docutils literal"><span class="pre">is_valid()</span></tt> method on any bound <tt class="docutils literal"><span class="pre">Form</span></tt> to find out whether its
+data is valid. We’ve passed a valid value for each field, so the <tt class="docutils literal"><span class="pre">Form</span></tt> in
+its entirety is valid:<div id="b136" class="comment-indicator has-comments" style="height: 39px; "><span>4</span></div></p>
+<pre class="cn literal-block" id="cn137">&gt;&gt;&gt; f.is_valid()
+True
+<div id="b137" class="comment-indicator" style="height: 46px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn138">If we don’t pass the <tt class="docutils literal"><span class="pre">email</span></tt> field, it’s still valid, because we’ve specified
+<tt class="docutils literal"><span class="pre">required=False</span></tt> for that field:<div id="b138" class="comment-indicator" style="height: 20px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn139">&gt;&gt;&gt; f = ContactForm({'subject': 'Hello', 'message': 'Nice site!'})
+&gt;&gt;&gt; f.is_valid()
+True
+<div id="b139" class="comment-indicator" style="height: 65px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn140">But, if we leave off either <tt class="docutils literal"><span class="pre">subject</span></tt> or <tt class="docutils literal"><span class="pre">message</span></tt>, the <tt class="docutils literal"><span class="pre">Form</span></tt> is no
+longer valid:<div id="b140" class="comment-indicator" style="height: 20px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn141">&gt;&gt;&gt; f = ContactForm({'subject': 'Hello'})
+&gt;&gt;&gt; f.is_valid()
+False
+&gt;&gt;&gt; f = ContactForm({'subject': 'Hello', 'message': ''})
+&gt;&gt;&gt; f.is_valid()
+False
+<div id="b141" class="comment-indicator" style="height: 122px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn142">You can drill down to get field-specific error messages:<div id="b142" class="comment-indicator has-comments" style="height: 19px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn143">&gt;&gt;&gt; f = ContactForm({'subject': 'Hello', 'message': ''})
+&gt;&gt;&gt; f['message'].errors
+[u'This field is required.']
+&gt;&gt;&gt; f['subject'].errors
+[]
+&gt;&gt;&gt; f['email'].errors
+[]
+<div id="b143" class="comment-indicator" style="height: 141px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn144">Each bound <tt class="docutils literal"><span class="pre">Form</span></tt> instance has an <tt class="docutils literal"><span class="pre">errors</span></tt> attribute that gives you a
+dictionary mapping field names to error-message lists:<div id="b144" class="comment-indicator" style="height: 38px; "><span></span></div></p>
+<pre class="cn literal-block" id="cn145">&gt;&gt;&gt; f = ContactForm({'subject': 'Hello', 'message': ''})
+&gt;&gt;&gt; f.errors
+{'message': [u'This field is required.']}
+<div id="b145" class="comment-indicator" style="height: 65px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn146">Finally, for <tt class="docutils literal"><span class="pre">Form</span></tt> instances whose data has been found to be valid, a
+<tt class="docutils literal"><span class="pre">cleaned_data</span></tt> attribute is available. This is a dictionary of the
+submitted data, “cleaned up.” Django’s forms framework not only validates
+data, it cleans it up by converting values to the appropriate Python types.<div id="b146" class="comment-indicator has-comments" style="height: 56px; "><span>5</span></div></p>
+<pre class="cn doctest-block" id="cn147">&gt;&gt;&gt; f = ContactForm({‘subject’: ‘Hello’, ‘email’: ‘adrian@example.com’, ‘message’: ‘Nice site!’})
+&gt;&gt;&gt; f.is_valid()
+True
+&gt;&gt;&gt; f.cleaned_data
+{‘message’: u’Nice site!’, ‘email’: u’adrian@example.com’, ‘subject’: u’Hello’}
+<div id="b147" class="comment-indicator" style="height: 103px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn148">Our contact form only deals with strings, which are “cleaned” into Unicode
+objects — but if we were to use an <tt class="docutils literal"><span class="pre">IntegerField</span></tt> or <tt class="docutils literal"><span class="pre">DateField</span></tt>, the
+forms framework would ensure that <tt class="docutils literal"><span class="pre">cleaned_data</span></tt> used proper Python
+integers or <tt class="docutils literal"><span class="pre">datetime.date</span></tt> objects for the given fields.<div id="b148" class="comment-indicator has-comments" style="height: 57px; "><span>4</span></div></p>
+</div>
+<div class="section" id="s-tying-form-objects-into-views">
+<h3 class="cn" id="cn149">Tying Form Objects Into Views<div id="b149" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn150">With some basic knowledge about <tt class="docutils literal"><span class="pre">Form</span></tt> classes, you might see how we can use
+this infrastructure to replace some of the cruft in our <tt class="docutils literal"><span class="pre">contact()</span></tt> view.
+Here’s how we can rewrite <tt class="docutils literal"><span class="pre">contact()</span></tt> to use the forms framework:<div id="b150" class="comment-indicator has-comments" style="height: 57px; "><span>24</span></div></p>
+<pre class="cn literal-block" id="cn151"># views.py
+
+from django.shortcuts import render_to_response
+from mysite.contact.forms import ContactForm
+
+def contact(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            send_mail(
+                cd['subject'],
+                cd['message'],
+                cd.get('email', 'noreply@example.com'),
+                ['siteowner@example.com'],
+            )
+            return HttpResponseRedirect('/contact/thanks/')
+    else:
+        form = ContactForm()
+    return render_to_response('contact_form.html', {'form': form})
+
+# contact_form.html
+
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Contact us&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Contact us&lt;/h1&gt;
+
+    {% if form.errors %}
+        &lt;p style="color: red;"&gt;
+            Please correct the error{{ form.errors|pluralize }} below.
+        &lt;/p&gt;
+    {% endif %}
+
+    &lt;form action="" method="post"&gt;
+        &lt;table&gt;
+            {{ form.as_table }}
+        &lt;/table&gt;
+        &lt;input type="submit" value="Submit"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b151" class="comment-indicator" style="height: 844px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn152">Look at how much cruft we’ve been able to remove! Django’s forms framework
+handles the HTML display, the validation, data cleanup and form
+redisplay-with-errors.<div id="b152" class="comment-indicator has-comments" style="height: 37px; "><span>17</span></div></p>
+<p class="cn" id="cn153">Try running this locally. Load the form, submit it with none of the fields
+filled out, submit it with an invalid e-mail address, then finally submit it
+with valid data. (Of course, depending on your mail-server configuration, you
+might get an error when <tt class="docutils literal"><span class="pre">send_mail()</span></tt> is called, but that’s another issue.)<div id="b153" class="comment-indicator has-comments" style="height: 56px; "><span>8</span></div></p>
+</div>
+<div class="section" id="s-changing-how-fields-are-rendered">
+<h3 class="cn" id="cn154">Changing How Fields Are Rendered<div id="b154" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn155">Probably the first thing you’ll notice when you render this form locally is
+that the <tt class="docutils literal"><span class="pre">message</span></tt> field is displayed as an <tt class="docutils literal"><span class="pre">&lt;input</span> <span class="pre">type="text"&gt;</span></tt>, and it
+ought to be a <tt class="docutils literal"><span class="pre">&lt;textarea&gt;</span></tt>. We can fix that by setting the field’s <em>widget</em>:<div id="b155" class="comment-indicator has-comments" style="height: 39px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn156">from django import forms
+
+class ContactForm(forms.Form):
+    subject = forms.CharField()
+    email = forms.EmailField(required=False)
+    message = forms.CharField(<strong>widget=forms.Textarea</strong>)
+<div id="b156" class="comment-indicator" style="height: 122px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn157">The forms framework separates out the presentation logic for each field into a
+set of widgets. Each field type has a default widget, but you can easily
+override the default, or provide a custom widget of your own.<div id="b157" class="comment-indicator" style="height: 37px; "><span></span></div></p>
+<p class="cn" id="cn158">Think of the <tt class="docutils literal"><span class="pre">Field</span></tt> classes as representing <em>validation logic</em>, while
+widgets represent <em>presentation logic</em>.<div id="b158" class="comment-indicator" style="height: 20px; "><span></span></div></p>
+</div>
+<div class="section" id="s-setting-a-maximum-length">
+<h3 class="cn" id="cn159">Setting a Maximum Length<div id="b159" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn160">One of the most common validation needs is to check that a field is of a
+certain size. For good measure, we should improve our <tt class="docutils literal"><span class="pre">ContactForm</span></tt> to limit
+the <tt class="docutils literal"><span class="pre">subject</span></tt> to 100 characters. To do that, just supply a <tt class="docutils literal"><span class="pre">max_length</span></tt> to
+the <tt class="docutils literal"><span class="pre">CharField</span></tt>, like this:<div id="b160" class="comment-indicator has-comments" style="height: 57px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn161">from django import forms
+
+class ContactForm(forms.Form):
+    subject = forms.CharField(<strong>max_length=100</strong>)
+    email = forms.EmailField(required=False)
+    message = forms.CharField(widget=forms.Textarea)
+<div id="b161" class="comment-indicator" style="height: 122px; "><span></span></div></pre>
+<p class="cn" id="cn162">An optional <tt class="docutils literal"><span class="pre">min_length</span></tt> argument is also available.<div id="b162" class="comment-indicator" style="height: 20px; "><span></span></div></p>
+</div>
+<div class="section" id="s-setting-initial-values">
+<h3 class="cn" id="cn163">Setting Initial Values<div id="b163" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn164">As an improvement to this form, let’s add an <em>initial value</em> for the
+<tt class="docutils literal"><span class="pre">subject</span></tt> field: <tt class="docutils literal"><span class="pre">"I</span> <span class="pre">love</span> <span class="pre">your</span> <span class="pre">site!"</span></tt> (A little power of suggestion can’t
+hurt.) To do this, we can use the <tt class="docutils literal"><span class="pre">initial</span></tt> argument when we create a
+<tt class="docutils literal"><span class="pre">Form</span></tt> instance:<div id="b164" class="comment-indicator has-comments" style="height: 57px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn165">def contact(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            send_mail(
+                cd['subject'],
+                cd['message'],
+                cd.get('email', <a class="reference external" href="mailto:'noreply@example.com">'noreply@example.com</a>'),
+                [<a class="reference external" href="mailto:'siteowner@example.com">'siteowner@example.com</a>'],
+            )
+            return HttpResponseRedirect('/contact/thanks/')
+    else:
+        form = ContactForm(
+            <strong>initial={'subject': 'I love your site!'}</strong>
+        )
+    return render_to_response('contact_form.html', {'form': form})
+<div id="b165" class="comment-indicator" style="height: 331px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn166">Now, the <tt class="docutils literal"><span class="pre">subject</span></tt> field will be displayed prepopulated with that kind
+statement.<div id="b166" class="comment-indicator" style="height: 20px; "><span></span></div></p>
+<p class="cn" id="cn167">Note that there is a difference between passing <em>initial</em> data and passing
+data that <em>binds</em> the form. The biggest difference is that if you’re just
+passing <em>initial</em> data, then the form will be <em>unbound</em>, which means it won’t
+have any error messages.<div id="b167" class="comment-indicator has-comments" style="height: 55px; "><span>6</span></div></p>
+</div>
+<div class="section" id="s-custom-validation-rules">
+<h3 class="cn" id="cn168">Custom Validation Rules<div id="b168" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn169">Imagine we’ve launched our feedback form, and the e-mails have started tumbling
+in. There’s just one problem: some of the submitted messages are just one or
+two words, which isn’t long enough for us to make sense of. We decide to adopt
+a new validation policy: four words or more, please.<div id="b169" class="comment-indicator" style="height: 55px; "><span></span></div></p>
+<p class="cn" id="cn170">There are a number of ways to hook custom validation into a Django form. If our
+rule is something we will reuse again and again, we can create a custom field
+type. Most custom validations are one-off affairs, though, and can be tied
+directly to the <tt class="docutils literal"><span class="pre">Form</span></tt> class.<div id="b170" class="comment-indicator has-comments" style="height: 56px; "><span>1</span></div></p>
+<p class="cn" id="cn171">We want additional validation on the <tt class="docutils literal"><span class="pre">message</span></tt> field, so we add a
+<tt class="docutils literal"><span class="pre">clean_message()</span></tt> method to our <tt class="docutils literal"><span class="pre">Form</span></tt> class:<div id="b171" class="comment-indicator has-comments" style="height: 20px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn172">from django import forms
+
+class ContactForm(forms.Form):
+    subject = forms.CharField(max_length=100)
+    email = forms.EmailField(required=False)
+    message = forms.CharField(widget=forms.Textarea)
+
+    def clean_message(self):
+        message = self.cleaned_data['message']
+        num_words = len(message.split())
+        if num_words &lt; 4:
+            raise forms.ValidationError("Not enough words!")
+        return message
+<div id="b172" class="comment-indicator" style="height: 255px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn173">Django’s form system automatically looks for any method whose name starts with
+<tt class="docutils literal"><span class="pre">clean_</span></tt> and ends with the name of a field. If any such method exists, it’s
+called during validation.<div id="b173" class="comment-indicator has-comments" style="height: 38px; "><span>1</span></div></p>
+<p class="cn" id="cn174">Specifically, the <tt class="docutils literal"><span class="pre">clean_message()</span></tt> method will be called <em>after</em> the default
+validation logic for a given field (in this case, the validation logic for a
+required <tt class="docutils literal"><span class="pre">CharField</span></tt>). Because the field data has already been partially
+processed, we pull it out of <tt class="docutils literal"><span class="pre">self.cleaned_data</span></tt>. Also, we don’t have to
+worry about checking that the value exists and is non-empty; that’s done by the
+default validator.<div id="b174" class="comment-indicator" style="height: 76px; "><span></span></div></p>
+<p class="cn" id="cn175">We naively use a combination of <tt class="docutils literal"><span class="pre">len()</span></tt> and <tt class="docutils literal"><span class="pre">split()</span></tt> to count the number
+of words. If the user has entered too few words, we raise a
+<tt class="docutils literal"><span class="pre">forms.ValidationError</span></tt>. The string attached to this exception will be
+displayed to the user as an item in the error list.<div id="b175" class="comment-indicator has-comments" style="height: 57px; "><span>2</span></div></p>
+<p class="cn" id="cn176">It’s important that we explicitly return the cleaned value for the field at the
+end of the method. This allows us to modify the value (or convert it to a
+different Python type) within our custom validation method. If we forget the
+return statement, then <tt class="docutils literal"><span class="pre">None</span></tt> will be returned, and the original value will
+be lost.<div id="b176" class="comment-indicator has-comments" style="height: 56px; "><span>5</span></div></p>
+</div>
+<div class="section" id="s-specifying-labels">
+<h3 class="cn" id="cn177">Specifying labels<div id="b177" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn178">By default, the labels on Django’s auto-generated form HTML are created by
+replacing underscores with spaces and capitalizing the first letter — so the
+label for the <tt class="docutils literal"><span class="pre">email</span></tt> field is <tt class="docutils literal"><span class="pre">"Email"</span></tt>. (Sound familiar? It’s the same
+simple algorithm that Django’s models use to calculate default <tt class="docutils literal"><span class="pre">verbose_name</span></tt>
+values for fields. We covered this in Chapter 5.)<div id="b178" class="comment-indicator has-comments" style="height: 75px; "><span>2</span></div></p>
+<p class="cn" id="cn179">But, as with Django’s models, we can customize the label for a given field.
+Just use <tt class="docutils literal"><span class="pre">label</span></tt>, like so:<div id="b179" class="comment-indicator has-comments" style="height: 20px; "><span>1</span></div></p>
+<pre class="cn literal-block" id="cn180">class ContactForm(forms.Form):
+    subject = forms.CharField(max_length=100)
+    email = forms.EmailField(required=False, <strong>label='Your e-mail address'</strong>)
+    message = forms.CharField(widget=forms.Textarea)
+<div id="b180" class="comment-indicator" style="height: 84px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+</div>
+<div class="section" id="s-customizing-form-design">
+<h3 class="cn" id="cn181">Customizing Form Design<div id="b181" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn182">Our <tt class="docutils literal"><span class="pre">contact_form.html</span></tt> template uses <tt class="docutils literal"><span class="pre">{{</span> <span class="pre">form.as_table</span> <span class="pre">}}</span></tt> to display the
+form, but we can display the form in other ways to get more granular control
+over display.<div id="b182" class="comment-indicator" style="height: 38px; "><span></span></div></p>
+<p class="cn" id="cn183">The quickest way to customize forms’ presentation is with CSS. Error lists, in
+particular, could do with some visual enhancement, and the auto-generated error
+lists use <tt class="docutils literal"><span class="pre">&lt;ul</span> <span class="pre">class="errorlist"&gt;</span></tt> precisely so that you can target them with
+CSS. The following CSS really makes our errors stand out:<div id="b183" class="comment-indicator has-comments" style="height: 56px; "><span>8</span></div></p>
+<pre class="cn literal-block" id="cn184">&lt;style type="text/css"&gt;
+    ul.errorlist {
+        margin: 0;
+        padding: 0;
+    }
+    .errorlist li {
+        background-color: red;
+        color: white;
+        display: block;
+        font-size: 10px;
+        margin: 0 0 3px;
+        padding: 4px 5px;
+    }
+&lt;/style&gt;
+<div id="b184" class="comment-indicator" style="height: 274px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn185">While it’s convenient to have our form’s HTML generated for us, in many
+cases you’ll want to override the default rendering. <tt class="docutils literal"><span class="pre">{{</span> <span class="pre">form.as_table</span> <span class="pre">}}</span></tt>
+and friends are useful shortcuts while you develop your application, but
+everything about the way a form is displayed can be overridden, mostly within
+the template itself, and you’ll probably find yourself doing this.<div id="b185" class="comment-indicator has-comments" style="height: 74px; "><span>3</span></div></p>
+<p class="cn" id="cn186">Each field’s widget (<tt class="docutils literal"><span class="pre">&lt;input</span> <span class="pre">type="text"&gt;</span></tt>, <tt class="docutils literal"><span class="pre">&lt;select&gt;</span></tt>, <tt class="docutils literal"><span class="pre">&lt;textarea&gt;</span></tt>,
+etc.) can be rendered individually by accessing <tt class="docutils literal"><span class="pre">{{</span> <span class="pre">form.fieldname</span> <span class="pre">}}</span></tt> in the
+template, and any errors associated with a field are available as
+<tt class="docutils literal"><span class="pre">{{</span> <span class="pre">form.fieldname.errors</span> <span class="pre">}}</span></tt>. With this in mind, we can construct a custom
+template for our contact form with the following template code:<div id="b186" class="comment-indicator has-comments" style="height: 76px; "><span>3</span></div></p>
+<pre class="cn literal-block" id="cn187">&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Contact us&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Contact us&lt;/h1&gt;
+
+    {% if form.errors %}
+        &lt;p style="color: red;"&gt;
+            Please correct the error{{ form.errors|pluralize }} below.
+        &lt;/p&gt;
+    {% endif %}
+
+    &lt;form action="" method="post"&gt;
+        &lt;div class="field"&gt;
+            {{ form.subject.errors }}
+            &lt;label for="id_subject"&gt;Subject:&lt;/label&gt;
+            {{ form.subject }}
+        &lt;/div&gt;
+        &lt;div class="field"&gt;
+            {{ form.email.errors }}
+            &lt;label for="id_email"&gt;Your e-mail address:&lt;/label&gt;
+            {{ form.email }}
+        &lt;/div&gt;
+        &lt;div class="field"&gt;
+            {{ form.message.errors }}
+            &lt;label for="id_message"&gt;Message:&lt;/label&gt;
+            {{ form.message }}
+        &lt;/div&gt;
+        &lt;input type="submit" value="Submit"&gt;
+    &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+<div id="b187" class="comment-indicator has-comments" style="height: 635px; "><span>1</span></div></pre>
+<p class="cn" id="cn188"><tt class="docutils literal"><span class="pre">{{</span> <span class="pre">form.message.errors</span> <span class="pre">}}</span></tt> displays a <tt class="docutils literal"><span class="pre">&lt;ul</span> <span class="pre">class="errorlist"&gt;</span></tt> if errors
+are present and a blank string if the field is valid (or the form is unbound).
+We can also treat <tt class="docutils literal"><span class="pre">form.message.errors</span></tt> as a Boolean or even iterate
+over it as a list. For example:<div id="b188" class="comment-indicator has-comments" style="height: 57px; "><span>7</span></div></p>
+<pre class="cn literal-block" id="cn189">&lt;div class="field{% if form.message.errors %} errors{% endif %}"&gt;
+    {% if form.message.errors %}
+        &lt;ul&gt;
+        {% for error in form.message.errors %}
+            &lt;li&gt;&lt;strong&gt;{{ error }}&lt;/strong&gt;&lt;/li&gt;
+        {% endfor %}
+        &lt;/ul&gt;
+    {% endif %}
+    &lt;label for="id_message"&gt;Message:&lt;/label&gt;
+    {{ form.message }}
+&lt;/div&gt;
+<div id="b189" class="comment-indicator" style="height: 217px; "><span></span></div></pre>
+<!-- SL Tested ok -->
+<p class="cn" id="cn190">In the case of validation errors, this will add an “errors” class to the
+containing <tt class="docutils literal"><span class="pre">&lt;div&gt;</span></tt> and display the list of errors in an unordered list.<div id="b190" class="comment-indicator" style="height: 38px; "><span></span></div></p>
+</div>
+<div class="section" id="s-what-s-next">
+<h3 class="cn" id="cn191">What’s Next?<div id="b191" class="comment-indicator" style="height: 21px; "><span></span></div></h3>
+<p class="cn" id="cn192">This chapter concludes the introductory material in this book — the so-called
+“core curriculum.” The next section of the book, Chapters 8 to 12, goes into
+more detail about advanced Django usage, including how to deploy a Django
+application (Chapter 12).<div id="b192" class="comment-indicator has-comments" style="height: 55px; "><span>2</span></div></p>
+<p class="cn" id="cn193">After these first seven chapters, you should know enough to start writing your
+own Django projects. The rest of the material in this book will help fill in the
+missing pieces as you need them.<div id="b193" class="comment-indicator" style="height: 37px; "><span></span></div></p>
+<p class="cn" id="cn194">We’ll start in <a class="reference external" href="http://www.djangobook.com/en/2.0/chapter08/">Chapter 8</a> by doubling back and taking a closer look at views
+and URLconfs (introduced first in <a class="reference external" href="http://www.djangobook.com/en/2.0/chapter03/">Chapter 3</a>).<div id="b194" class="comment-indicator" style="height: 37px; "><span></span></div></p>
+</div>
+
+  </div>
+            
+          </div>
+        </div>
+      </div>
+      <div id="ft">
+        <div class="nav">
+	
+		<a href="http://www.djangobook.com/en/2.0/chapter06/">« previous</a> ◊
+	
+	<a href="http://www.djangobook.com/en/2.0/">table of contents</a>
+	
+		◊ <a href="http://www.djangobook.com/en/2.0/chapter08/">next »</a>
+	
+</div>
+
+        Copyright 2006, 2007, 2008, 2009 Adrian Holovaty and Jacob Kaplan-Moss.<br>This
+        work is licensed under the <a href="http://www.djangobook.com/license/">GNU Free Document
+        License</a>.
+        <br>
+        Hosting graciously provided by <a href="http://mediatemple.net/">
+        <img style="vertical-align: middle; position: relative; top: -1px;" src="./Chapter 7  Forms_files/mt.png" alt="media temple"></a>
+      </div>
+    </div>
+    <!--
+    <script src="http://www.google-analytics.com/urchin.js" type="text/javascript"></script>
+    <script type="text/javascript">_uacct = "UA-848611-1"; urchinTracker();</script>
+    --> 
+  
+  <div id="highlight-floater" style="visibility: hidden; opacity: 0.3; width: 730px; "></div>
+  <!-- comment dialog -->
+  <div id="comments" class="yresizable-pinned" style="display: none; width: 498px; height: 398px; ">
+    <div class="hd" id="comments-head">
+      Comments <span class="close" onclick="Comments.close();">X</span>
+    </div>
+    <div class="bd">
+      <div id="comment-tabs">
+        
+        <!-- comment form -->
+        
+        
+        <!-- comments on this node tab: filled in dynamically -->
+        
+        
+        <!-- all comments tab: also dynamic -->
+        
+        
+        <!-- help -->
+        
+
+      <div class=" tabset"><div id="tab-strip0" class=" hd"><ul id="tab-strip-list1"><li id="elgen-4" style="display: none; "><a><em>Post a comment</em></a></li><li class=" on" style="display: inline; " id="elgen-3"><a><strong><em>Post a comment</em></strong></a></li><li id="elgen-6"><a><em>Comments on this block</em></a></li><li class=" on" style="display: none; " id="elgen-5"><a><strong><em>Comments on this block</em></strong></a></li><li id="elgen-8"><a><em>All comments</em></a></li><li class=" on" style="display: none; " id="elgen-7"><a><strong><em>All comments</em></strong></a></li><li id="elgen-10"><a><em>Help</em></a></li><li class=" on" style="display: none; " id="elgen-9"><a><strong><em>Help</em></strong></a></li></ul></div></div><div id="tab-body2" class=" yui-ext-tabbody" style="width: 466px; height: 259px; "><div id="comment-tabs-form" class="tab yui-ext-tabitembody" style="display: block; ">
+          
+          <form action="http://www.djangobook.com/en/2.0/chapter07/comments/" method="post" id="commentform">
+            <p>
+              <input type="hidden" name="nodenum" value="">
+              <label for="id_name">Name (required)</label>
+              <input type="text" name="name" id="id_name" value="" tabindex="1">
+            </p>
+            <p>
+              <label for="id_email">E-mail (required; will not be displayed)</label>
+              <input type="text" name="email" id="id_email" value="" tabindex="2">
+            </p>
+            <p>
+              <label for="id_url">Website</label>
+              <input type="text" name="url" id="id_url" value="" tabindex="3">
+            </p>
+            <p>
+              <label for="id_comment">Comment</label>
+              <textarea name="comment" id="id_comment" tabindex="4" cols="40" rows="15" style="width: 464px; height: 94px; "></textarea>
+            </p>
+          </form>
+          
+        </div><div id="comment-tabs-current" class="tab yui-ext-tabitembody" style="display: none; ">
+          <ol id="current-comments-list"></ol>
+        </div><div id="comment-tabs-all" class="tab yui-ext-tabitembody" style="display: none; ">
+          <ol id="all-comments-list"></ol>
+        </div><div id="comment-tabs-help" class="tab yui-ext-tabitembody" style="display: none; ">
+          <h4>About this comment system</h4>
+          <p>
+            This site is using a contextual comment system to help us gather
+            targeted feedback about the book.  Instead of commenting on an
+            entire chapter, you can leave comments on any indivdual "block"
+            in the chapter. A "block" with comments looks like this:
+          </p>
+          <p class="image">
+            <img src="./Chapter 7  Forms_files/comments1.png" width="350" height="100">
+          </p>
+          <p>
+            A "block" is a paragraph, list item, code sample, or other small
+            chunk of content.  It'll get highlighted when you select it:
+          </p>
+          <p class="image">
+            <img src="./Chapter 7  Forms_files/comments2.png" width="350" height="100">
+          </p>
+          <p>
+            To post a comment on a block, just click in the gutter next to the
+            bit you want to comment on:
+          </p>
+          <p class="image">
+            <img src="./Chapter 7  Forms_files/comments3.png" width="350" height="100">
+          </p>
+          <p>
+            As we edit the book, we'll review everyone's comments and roll them into
+            a future version of the book. We'll mark reviewed comments with a little
+            checkmark:
+          </p>
+          <p>
+            Please make sure to leave a full name (and not a nickname or
+            screenname) if you'd like your contributions acknowledged in print.
+          </p>
+          <p class="image">
+            <img src="./Chapter 7  Forms_files/comments4.png" width="350" height="100">
+          </p>
+          <p>
+            Many, many thanks to <a href="http://www.jackslocum.com/yui/">Jack Slocum</a>;
+            the inspiration and much of the code for the comment system comes from Jack's
+            blog, and this site couldn't have been built without his wonderful 
+            <code>YAHOO.ext</code> library.  Thanks also to Yahoo for YUI itself.
+          </p>
+        </div></div></div>
+    </div>
+    <div class="ft">
+       <div id="comments-message" class="" style="visibility: hidden; "></div>
+       <div id="comments-submit-wrapper">
+        <input type="button" id="comment-submit" value="Post comment" onclick="Comments.submitComment();" style="visibility: visible; ">
+        <input type="button" id="comment-close" value="Close" onclick="Comments.close();">
+      </div>
+    </div>
+  <div class="yresizable-handle yresizable-handle-east" id="elgen-11">&nbsp;</div><div class="yresizable-handle yresizable-handle-south" id="elgen-12">&nbsp;</div><div class="yresizable-handle yresizable-handle-southeast" id="elgen-13">&nbsp;</div></div>
+  
+    <script type="text/javascript" src="./Chapter 7  Forms_files/djangobook-min-all.js"></script>
+  
+
+  
+
+<div id="GOOGLE_INPUT_CHEXT_FLAG" style="display: none; "></div></body></html>
