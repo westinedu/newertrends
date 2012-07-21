@@ -2,11 +2,13 @@ from django.conf.urls.defaults import *
 
 from bookmarks.views import *
 from django.contrib import admin
+from zinnia.urls import *
+from django.contrib.comments.urls import *
 admin.autodiscover()
 handler500 = 'djangotoolbox.errorviews.server_error'
 
 urlpatterns = patterns('',    
-    (r'^$', fb),
+    (r'^$', fb),   
     (r'^admin/', include(admin.site.urls)),
  #   (r'^accounts/', include('registration.backends.default.urls')),
     (r'image', image),
@@ -18,5 +20,7 @@ urlpatterns = patterns('',
      {'template': 'home.html'}),
     ('^evertodo$', 'django.views.generic.simple.redirect_to',
      {'url': '/evertodo/'}),
+    (r'^weblog/', include('zinnia.urls')),
+    (r'^comments/', 'django.contrib.comments.urls'),
 )
 
