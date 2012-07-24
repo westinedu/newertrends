@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import *
-
+from mezzanine.core.views import direct_to_template
 from bookmarks.views import *
 from django.contrib import admin
 from zinnia.urls import *
@@ -8,7 +8,7 @@ admin.autodiscover()
 handler500 = 'djangotoolbox.errorviews.server_error'
 
 urlpatterns = patterns('',    
-    (r'^$', fb),   
+    url(r"^$", direct_to_template, {"template": "index.html"}, name="home"),
     (r'^admin/', include(admin.site.urls)),
  #   (r'^accounts/', include('registration.backends.default.urls')),
     (r'image', image),
